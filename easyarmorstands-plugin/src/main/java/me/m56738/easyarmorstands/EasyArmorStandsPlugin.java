@@ -225,7 +225,7 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
         regionPrivilegeManager = new RegionListenerManager();
 
         addonManager = new AddonManager(getLogger());
-        addonManager.load(getClassLoader());
+        // Don't load addons yet - they depend on capabilities being fully available
     }
 
     @Override
@@ -258,6 +258,15 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
             e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
             return;
+        }
+
+        // Load addons AFTER capabilities and element providers are initialized
+        try {
+            addonManager.load(getClassLoader());
+        } catch (Exception e) {
+            getLogger().severe("Failed to load addons: " + e.getMessage());
+            e.printStackTrace();
+            // Don't disable plugin, continue without addons
         }
 
         sessionManager = new SessionManagerImpl();
