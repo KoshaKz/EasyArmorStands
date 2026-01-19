@@ -176,7 +176,6 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
     private BukkitGizmos gizmos;
     private CommandManager<EasCommandSender> commandManager;
     private AnnotationParser<EasCommandSender> annotationParser;
-    private boolean isRunningOnFolia = false;
 
     public static EasyArmorStandsPlugin getInstance() {
         return instance;
@@ -184,10 +183,6 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
 
     public Path getConfigFolder() {
         return getDataFolder().toPath();
-    }
-
-    public boolean isRunningOnFolia() {
-        return isRunningOnFolia;
     }
 
     @Override
@@ -248,19 +243,10 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
 
     @Override
     public void onEnable() {
+        // Initialize Folia scheduler support
         new Metrics(this, 17911);
         adventure = BukkitAudiences.create(this);
         gizmos = BukkitGizmos.create(this);
-
-        // Detect if running on Folia or Paper
-        try {
-            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
-            isRunningOnFolia = true;
-            getLogger().info("✅ [Folia Support] Running on Folia with multi-threaded scheduler");
-        } catch (ClassNotFoundException e) {
-            isRunningOnFolia = false;
-            getLogger().info("⭕ [Folia Support] Running on Paper/Spigot with single-threaded scheduler");
-        }
 
         loadProperties();
 
@@ -278,13 +264,19 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
             getServer().getPluginManager().registerEvents(new SkeletonLoginListener(sessionManager), this);
         }
 
-        // Schedule tasks only on Paper/Spigot (Folia handles updates through event system)
+        // Detect Folia and schedule tasks accordingly
+        boolean isRunningOnFolia = false;
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            isRunningOnFolia = true;
+            getLogger().info("✅ [Folia] Detected Folia - using event-driven updates");
+        } catch (ClassNotFoundException e) {
+            getLogger().info("⭕ [Paper] Running on Paper/Spigot - scheduling tasks");
+        }
+
         if (!isRunningOnFolia) {
             getServer().getScheduler().runTaskTimer(this, sessionManager::update, 0, 1);
             getServer().getScheduler().runTaskTimer(this, sessionListener::update, 0, 1);
-            getLogger().info("✅ [Scheduler] Session tasks scheduled using Paper/Spigot scheduler");
-        } else {
-            getLogger().info("ℹ️  [Scheduler] Scheduled tasks disabled on Folia (uses event-driven updates)");
         }
 
         SwapHandItemsCapability swapHandItemsCapability = getCapability(SwapHandItemsCapability.class);
