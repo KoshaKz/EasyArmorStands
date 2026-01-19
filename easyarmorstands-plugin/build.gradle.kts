@@ -10,6 +10,8 @@ plugins {
 
 dependencies {
     compileOnly(libs.bukkit)
+    // Folia support
+    compileOnly("io.papermc.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
     compileOnlyApi(libs.jetbrains.annotations)
     compileOnlyApi(libs.checker.qual)
     api(project(":easyarmorstands-api"))
@@ -33,7 +35,7 @@ dependencies {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.8")
+        minecraftVersion("1.21.11")
         javaLauncher = project.javaToolchains.launcherFor {
             languageVersion = JavaLanguageVersion.of(21)
         }
@@ -94,88 +96,12 @@ fun registerVersion(name: String, api: String) {
     }
 }
 
-registerVersion("v1_8", "org.bukkit:bukkit:1.8.8-R0.1-SNAPSHOT")
-registerVersion("v1_9", "org.bukkit:bukkit:1.9-R0.1-SNAPSHOT")
-registerVersion("v1_9_spigot", "org.spigotmc:spigot-api:1.9.4-R0.1-SNAPSHOT")
-registerVersion("v1_10_2", "org.bukkit:bukkit:1.10.2-R0.1-SNAPSHOT")
-registerVersion("v1_11", "org.bukkit:bukkit:1.11-R0.1-SNAPSHOT")
-registerVersion("v1_12", "org.bukkit:bukkit:1.12-R0.1-SNAPSHOT")
-registerVersion("v1_12_paper", "com.destroystokyo.paper:paper-api:1.12.2-R0.1-SNAPSHOT")
-registerVersion("v1_13", "org.bukkit:bukkit:1.13-R0.1-SNAPSHOT")
-registerVersion("v1_14", "org.bukkit:bukkit:1.14-R0.1-SNAPSHOT")
-registerVersion("v1_15_2", "org.bukkit:bukkit:1.15.2-R0.1-SNAPSHOT")
-registerVersion("v1_16", "org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
-registerVersion("v1_16_paper", "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
-registerVersion("v1_18", "org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT")
-registerVersion("v1_18_paper", "io.papermc.paper:paper-api:1.18-R0.1-SNAPSHOT")
-registerVersion("v1_19_4", "org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT")
-registerVersion("v1_20_2", "org.spigotmc:spigot-api:1.20.2-R0.1-SNAPSHOT")
-registerVersion("v1_20_6", "org.spigotmc:spigot-api:1.20.6-R0.1-SNAPSHOT")
-registerVersion("v1_20_6_paper", "io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
-registerVersion("v1_21_10_spigot", "org.spigotmc:spigot-api:1.21.10-R0.1-SNAPSHOT")
+// Support only 1.21.10 and 1.21.11 with Folia
 registerVersion("v1_21_10_paper", "io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+registerVersion("v1_21_11_paper", "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+registerVersion("v1_21_11_folia", "io.papermc.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
 
 val supportedGameVersions = listOf(
-    "1.8.8",
-    "1.8.9",
-    "1.9",
-    "1.9.1",
-    "1.9.2",
-    "1.9.3",
-    "1.9.4",
-    "1.10",
-    "1.10.1",
-    "1.10.2",
-    "1.11",
-    "1.11.1",
-    "1.11.2",
-    "1.12",
-    "1.12.1",
-    "1.12.2",
-    "1.13",
-    "1.13.1",
-    "1.13.2",
-    "1.14",
-    "1.14.1",
-    "1.14.2",
-    "1.14.3",
-    "1.14.4",
-    "1.15",
-    "1.15.1",
-    "1.15.2",
-    "1.16",
-    "1.16.1",
-    "1.16.2",
-    "1.16.3",
-    "1.16.4",
-    "1.16.5",
-    "1.17",
-    "1.17.1",
-    "1.18",
-    "1.18.1",
-    "1.18.2",
-    "1.19",
-    "1.19.1",
-    "1.19.2",
-    "1.19.3",
-    "1.19.4",
-    "1.20",
-    "1.20.1",
-    "1.20.2",
-    "1.20.3",
-    "1.20.4",
-    "1.20.5",
-    "1.20.6",
-    "1.21",
-    "1.21.1",
-    "1.21.2",
-    "1.21.3",
-    "1.21.4",
-    "1.21.5",
-    "1.21.6",
-    "1.21.7",
-    "1.21.8",
-    "1.21.9",
     "1.21.10",
     "1.21.11",
 )
@@ -200,7 +126,7 @@ hangarPublish {
         platforms {
             register(Platforms.PAPER) {
                 jar = tasks.shadowJar.flatMap { it.archiveFile }
-                platformVersions = supportedGameVersions - listOf("1.8.9")
+                platformVersions = supportedGameVersions
             }
         }
         pages {
