@@ -176,7 +176,6 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
     private BukkitGizmos gizmos;
     private CommandManager<EasCommandSender> commandManager;
     private AnnotationParser<EasCommandSender> annotationParser;
-    private boolean serializersInitialized = false;
 
     public static EasyArmorStandsPlugin getInstance() {
         return instance;
@@ -255,9 +254,6 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
         } catch (ClassNotFoundException e) {
             getLogger().info("⭕ [Folia Support] Running on Paper/Spigot with single-threaded scheduler");
         }
-
-        // Initialize serializers NOW before loadProperties() to ensure menuSlotTypeRegistry is ready
-        ensureSerializersInitialized();
 
         loadProperties();
 
@@ -347,18 +343,6 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
             Object capability = entry.getInstance();
             if (capability instanceof Listener) {
                 getServer().getPluginManager().registerEvents((Listener) capability, this);
-            }
-        }
-    }
-
-    private void ensureSerializersInitialized() {
-        if (!serializersInitialized) {
-            try {
-                EasSerializers.serializers();
-                serializersInitialized = true;
-            } catch (ExceptionInInitializerError e) {
-                getLogger().log(Level.SEVERE, "Failed to initialize serializers", e);
-                throw e;
             }
         }
     }
