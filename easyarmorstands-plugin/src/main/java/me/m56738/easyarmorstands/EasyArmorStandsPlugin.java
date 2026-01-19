@@ -176,6 +176,7 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
     private BukkitGizmos gizmos;
     private CommandManager<EasCommandSender> commandManager;
     private AnnotationParser<EasCommandSender> annotationParser;
+    private boolean isRunningOnFolia = false;
 
     public static EasyArmorStandsPlugin getInstance() {
         return instance;
@@ -183,6 +184,10 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
 
     public Path getConfigFolder() {
         return getDataFolder().toPath();
+    }
+
+    public boolean isRunningOnFolia() {
+        return isRunningOnFolia;
     }
 
     @Override
@@ -250,8 +255,10 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
         // Detect if running on Folia or Paper
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            isRunningOnFolia = true;
             getLogger().info("✅ [Folia Support] Running on Folia with multi-threaded scheduler");
         } catch (ClassNotFoundException e) {
+            isRunningOnFolia = false;
             getLogger().info("⭕ [Folia Support] Running on Paper/Spigot with single-threaded scheduler");
         }
 
@@ -270,8 +277,9 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
         if (!ReflectionUtil.isDeprecated(PlayerLoginEvent.class)) {
             getServer().getPluginManager().registerEvents(new SkeletonLoginListener(sessionManager), this);
         }
-        getServer().getScheduler().runTaskTimer(this, sessionManager::update, 0, 1);
-        getServer().getScheduler().runTaskTimer(this, sessionListener::update, 0, 1);
+
+        // Schedule tasks using Folia-compatible scheduler
+        scheduleSessionUpdates(sessionManager, sessionListener);
 
         SwapHandItemsCapability swapHandItemsCapability = getCapability(SwapHandItemsCapability.class);
         if (swapHandItemsCapability != null) {
@@ -345,6 +353,46 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
                 getServer().getPluginManager().registerEvents((Listener) capability, this);
             }
         }
+    }
+
+    /**
+     * Schedule session updates using Folia-compatible scheduler.
+     * On Folia, uses the global region scheduler. On Paper/Spigot, uses the standard scheduler.
+     */
+    private void scheduleSessionUpdates(SessionManagerImpl sessionManager, SessionListener sessionListener) {
+        if (isRunningOnFolia) {
+            try {
+                // Folia: Use global region scheduler
+                Object regionScheduler = Class.forName("io.papermc.paper.threadedregions.RegionizedServer")
+                        .getMethod("getGlobalRegionScheduler")
+                        .invoke(null);
+                
+                Class<?> globalSchedulerClass = Class.forName("io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler");
+                
+                // Schedule sessionManager updates
+                globalSchedulerClass.getMethod("runAtFixedRate", JavaPlugin.class, java.util.function.Consumer.class, long.class, long.class)
+                        .invoke(regionScheduler, this, (java.util.function.Consumer<?>) ctx -> sessionManager.update(), 1L, 1L);
+                
+                // Schedule sessionListener updates
+                globalSchedulerClass.getMethod("runAtFixedRate", JavaPlugin.class, java.util.function.Consumer.class, long.class, long.class)
+                        .invoke(regionScheduler, this, (java.util.function.Consumer<?>) ctx -> sessionListener.update(), 1L, 1L);
+                
+                getLogger().info("✅ Session tasks scheduled using Folia global region scheduler");
+            } catch (Exception e) {
+                getLogger().log(Level.WARNING, "Failed to schedule tasks on Folia, falling back to standard scheduler", e);
+                scheduleTasksStandard(sessionManager, sessionListener);
+            }
+        } else {
+            scheduleTasksStandard(sessionManager, sessionListener);
+        }
+    }
+
+    /**
+     * Schedule tasks using standard Bukkit scheduler (Paper/Spigot)
+     */
+    private void scheduleTasksStandard(SessionManagerImpl sessionManager, SessionListener sessionListener) {
+        getServer().getScheduler().runTaskTimer(this, sessionManager::update, 0, 1);
+        getServer().getScheduler().runTaskTimer(this, sessionListener::update, 0, 1);
     }
 
     private Callable<BufferedReader> getDefaultConfigSource(String name) {
