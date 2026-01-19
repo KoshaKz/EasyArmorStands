@@ -1,10 +1,9 @@
 package me.m56738.easyarmorstands;
 
-import me.m56738.easyarmorstands.util.FoliaScheduler;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * EasyArmorStands main plugin class with Folia support
+ * EasyArmorStands main plugin class
  */
 public class EasyArmorStandsPlugin extends JavaPlugin {
 
@@ -14,13 +13,13 @@ public class EasyArmorStandsPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         
-        // Initialize FoliaScheduler for multi-threaded support
-        FoliaScheduler.initialize(this);
-        
         getLogger().info("EasyArmorStands enabled!");
-        if (FoliaScheduler.isFolia()) {
+        
+        // Detect if running on Folia or Paper
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             getLogger().info("🟢 Running on Folia with multi-threaded scheduler");
-        } else {
+        } catch (ClassNotFoundException e) {
             getLogger().info("🔵 Running on Paper/Spigot with Bukkit scheduler");
         }
     }
