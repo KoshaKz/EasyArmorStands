@@ -6,9 +6,14 @@ Armor stand and display entity editor.
 
 # Installation
 
-**Supported Minecraft versions:** Spigot/Paper 1.8.8 to 1.21.11
+**Supported Minecraft versions:** Paper/Folia 1.21.10 - 1.21.11
+**Platforms:** Paper, Spigot (compatible with Folia)
 
 Download the latest `.jar` file and place it in your `plugins` folder.
+
+## Folia Support
+
+This version includes full support for **Folia** servers with a unified scheduler that automatically detects whether your server is running Paper/Spigot or Folia and uses the appropriate scheduler implementation.
 
 # Usage
 
