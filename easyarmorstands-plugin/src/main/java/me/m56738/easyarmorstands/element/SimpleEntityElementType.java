@@ -24,13 +24,12 @@ import java.util.function.Consumer;
 public class SimpleEntityElementType<E extends Entity> implements EntityElementType<E> {
     private final EntityType entityType;
     private final Class<E> entityClass;
-    private final Component displayName;
+    private volatile Component displayName; // Lazy initialization
 
     public SimpleEntityElementType(EntityType entityType, Class<E> entityClass) {
-        EntityTypeCapability entityTypeCapability = EasyArmorStandsPlugin.getInstance().getCapability(EntityTypeCapability.class);
         this.entityType = entityType;
         this.entityClass = entityClass;
-        this.displayName = entityTypeCapability.getName(entityType);
+        this.displayName = null; // Will be initialized lazily
     }
 
     @Override
@@ -77,6 +76,19 @@ public class SimpleEntityElementType<E extends Entity> implements EntityElementT
 
     @Override
     public @NotNull Component getDisplayName() {
+        if (displayName == null) {
+            synchronized (this) {
+                if (displayName == null) {
+                    EntityTypeCapability entityTypeCapability = EasyArmorStandsPlugin.getInstance().getCapability(EntityTypeCapability.class);
+                    if (entityTypeCapability == null) {
+                        // Fallback if capability still not loaded
+                        displayName = Component.text(entityType.name());
+                    } else {
+                        displayName = entityTypeCapability.getName(entityType);
+                    }
+                }
+            }
+        }
         return displayName;
     }
 
