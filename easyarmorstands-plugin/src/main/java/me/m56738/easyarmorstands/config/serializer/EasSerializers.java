@@ -16,21 +16,28 @@ import org.bukkit.Material;
 import java.text.DecimalFormat;
 
 public class EasSerializers {
-    private static final TypeSerializerCollection SERIALIZERS = TypeSerializerCollection.builder()
-            .register(Color.class, new ColorSerializer())
-            .register(Component.class, new MiniMessageSerializer(MiniMessage.miniMessage()))
-            .register(DecimalFormat.class, new DecimalFormatSerializer())
-            .register(ItemTemplate.class, new ItemTemplateSerializer())
-            .register(Key.class, new KeySerializer())
-            .register(Material.class, new MaterialSerializer())
-            .register(MenuFactory.class, new MenuFactorySerializer())
-            .register(MenuSlotFactory.class, new MenuSlotFactorySerializer())
-            .register(MenuSlotType.class, new MenuSlotTypeSerializer())
-            .register(PropertyType.type(), new PropertyTypeSerializer())
-            .register(MessageStyle.class, new MessageStyleSerializer())
-            .build();
+    private static TypeSerializerCollection SERIALIZERS;
 
+    /**
+     * Lazy-initialize serializers to avoid NPE when MenuSlotTypeSerializer
+     * tries to access menuSlotTypeRegistry() during static init.
+     */
     public static TypeSerializerCollection serializers() {
+        if (SERIALIZERS == null) {
+            SERIALIZERS = TypeSerializerCollection.builder()
+                    .register(Color.class, new ColorSerializer())
+                    .register(Component.class, new MiniMessageSerializer(MiniMessage.miniMessage()))
+                    .register(DecimalFormat.class, new DecimalFormatSerializer())
+                    .register(ItemTemplate.class, new ItemTemplateSerializer())
+                    .register(Key.class, new KeySerializer())
+                    .register(Material.class, new MaterialSerializer())
+                    .register(MenuFactory.class, new MenuFactorySerializer())
+                    .register(MenuSlotFactory.class, new MenuSlotFactorySerializer())
+                    .register(MenuSlotType.class, new MenuSlotTypeSerializer())
+                    .register(PropertyType.type(), new PropertyTypeSerializer())
+                    .register(MessageStyle.class, new MessageStyleSerializer())
+                    .build();
+        }
         return SERIALIZERS;
     }
 }
