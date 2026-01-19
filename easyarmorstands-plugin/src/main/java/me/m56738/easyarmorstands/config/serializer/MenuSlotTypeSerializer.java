@@ -1,6 +1,5 @@
 package me.m56738.easyarmorstands.config.serializer;
 
-import me.m56738.easyarmorstands.api.EasyArmorStands;
 import me.m56738.easyarmorstands.api.menu.MenuSlotType;
 import me.m56738.easyarmorstands.api.menu.MenuSlotTypeRegistry;
 import me.m56738.easyarmorstands.lib.configurate.ConfigurationNode;
@@ -10,16 +9,36 @@ import me.m56738.easyarmorstands.lib.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.lang.reflect.Type;
+import java.util.function.Supplier;
 
 public class MenuSlotTypeSerializer implements TypeSerializer<MenuSlotType> {
     private final MenuSlotTypeRegistry registry;
+    private final Supplier<MenuSlotTypeRegistry> registrySupplier;
 
-    public MenuSlotTypeSerializer() {
-        this(EasyArmorStands.get().menuSlotTypeRegistry());
-    }
-
+    /**
+     * Create serializer with explicit registry (preferred when registry is available)
+     */
     public MenuSlotTypeSerializer(MenuSlotTypeRegistry registry) {
         this.registry = registry;
+        this.registrySupplier = null;
+    }
+
+    /**
+     * Create serializer with deferred registry supplier (for lazy initialization)
+     */
+    public MenuSlotTypeSerializer(Supplier<MenuSlotTypeRegistry> registrySupplier) {
+        this.registry = null;
+        this.registrySupplier = registrySupplier;
+    }
+
+    private MenuSlotTypeRegistry getRegistry() {
+        if (registry != null) {
+            return registry;
+        }
+        if (registrySupplier != null) {
+            return registrySupplier.get();
+        }
+        throw new IllegalStateException("MenuSlotTypeRegistry not available");
     }
 
     @Override
@@ -28,7 +47,7 @@ public class MenuSlotTypeSerializer implements TypeSerializer<MenuSlotType> {
         if (key == null) {
             return null;
         }
-        MenuSlotType slotType = registry.getOrNull(key);
+        MenuSlotType slotType = getRegistry().getOrNull(key);
         if (slotType == null) {
             throw new SerializationException("Unknown menu slot type: " + key.asString());
         }
