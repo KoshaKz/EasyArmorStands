@@ -243,7 +243,6 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
 
     @Override
     public void onEnable() {
-        // Initialize Folia scheduler support
         new Metrics(this, 17911);
         adventure = BukkitAudiences.create(this);
         gizmos = BukkitGizmos.create(this);
@@ -284,7 +283,13 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
             swapHandItemsCapability.addListener(sessionListener);
         }
 
-        commandManager = getCapability(CommandCapability.class).createCommandManager();
+        CommandCapability commandCapability = getCapability(CommandCapability.class);
+        if (commandCapability == null) {
+            getLogger().severe("CommandCapability not loaded! Plugin will not function properly.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        commandManager = commandCapability.createCommandManager();
 
         MinecraftExceptionHandler.<EasCommandSender>createNative()
                 .defaultArgumentParsingHandler()
