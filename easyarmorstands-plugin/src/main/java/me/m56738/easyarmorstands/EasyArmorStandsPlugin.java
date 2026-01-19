@@ -196,16 +196,10 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
         propertyTypeRegistry = new PropertyTypeRegistryImpl();
         new DefaultPropertyTypes(propertyTypeRegistry);
 
-        ArmorStandElementType armorStandElementType = new ArmorStandElementType();
-        entityElementProviderRegistry = new EntityElementProviderRegistryImpl();
-        entityElementProviderRegistry.register(new ArmorStandElementProvider(armorStandElementType));
-        entityElementProviderRegistry.register(new SimpleEntityElementProvider());
-
         menuSlotTypeRegistry = new MenuSlotTypeRegistryImpl();
         menuSlotTypeRegistry.register(new EntityCopySlotType());
         menuSlotTypeRegistry.register(new ArmorStandPartSlotType());
         menuSlotTypeRegistry.register(new ArmorStandPositionSlotType());
-        menuSlotTypeRegistry.register(new ArmorStandSpawnSlotType(armorStandElementType));
         menuSlotTypeRegistry.register(new BackgroundSlotType());
         menuSlotTypeRegistry.register(new ColorAxisSlotType());
         menuSlotTypeRegistry.register(new ColorAxisChangeSlotType());
@@ -221,13 +215,6 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
         menuSlotTypeRegistry.register(new FallbackSlotType(Key.key("easyarmorstands", "spawn/mannequin")));
         menuSlotTypeRegistry.register(new FallbackSlotType(Key.key("easyarmorstands:traincarts/model_browser")));
         menuSlotTypeRegistry.register(new FallbackSlotType(Key.key("easyarmorstands:headdatabase")));
-
-        MannequinCapability mannequinCapability = getCapability(MannequinCapability.class);
-        if (mannequinCapability != null) {
-            MannequinElementType<?> type = mannequinCapability.createElementType();
-            entityElementProviderRegistry.register(new MannequinElementProvider<>(type, mannequinCapability));
-            menuSlotTypeRegistry.register(new MannequinSpawnSlotType(type));
-        }
 
         menuProvider = new MenuProviderImpl();
 
@@ -248,6 +235,30 @@ public class EasyArmorStandsPlugin extends JavaPlugin implements EasyArmorStands
         gizmos = BukkitGizmos.create(this);
 
         loadProperties();
+
+        // Now initialize element providers AFTER capabilities are loaded
+        entityElementProviderRegistry = new EntityElementProviderRegistryImpl();
+        
+        try {
+            ArmorStandElementType armorStandElementType = new ArmorStandElementType();
+            entityElementProviderRegistry.register(new ArmorStandElementProvider(armorStandElementType));
+            entityElementProviderRegistry.register(new SimpleEntityElementProvider());
+            
+            // Register armor stand spawn slot AFTER armorStandElementType is created
+            menuSlotTypeRegistry.register(new ArmorStandSpawnSlotType(armorStandElementType));
+            
+            MannequinCapability mannequinCapability = getCapability(MannequinCapability.class);
+            if (mannequinCapability != null) {
+                MannequinElementType<?> type = mannequinCapability.createElementType();
+                entityElementProviderRegistry.register(new MannequinElementProvider<>(type, mannequinCapability));
+                menuSlotTypeRegistry.register(new MannequinSpawnSlotType(type));
+            }
+        } catch (Exception e) {
+            getLogger().severe("Failed to initialize element providers: " + e.getMessage());
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         sessionManager = new SessionManagerImpl();
         historyManager = new HistoryManager();
