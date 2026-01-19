@@ -10,8 +10,6 @@ plugins {
 
 dependencies {
     compileOnly(libs.bukkit)
-    // Folia support
-    compileOnly("io.papermc.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
     compileOnlyApi(libs.jetbrains.annotations)
     compileOnlyApi(libs.checker.qual)
     api(project(":easyarmorstands-api"))
@@ -96,10 +94,10 @@ fun registerVersion(name: String, api: String) {
     }
 }
 
-// Support only 1.21.10 and 1.21.11 with Folia
+// Support 1.21.10 and 1.21.11
+// Folia support is via reflection only (no compile dependency needed)
 registerVersion("v1_21_10_paper", "io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
 registerVersion("v1_21_11_paper", "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-registerVersion("v1_21_11_folia", "io.papermc.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
 
 val supportedGameVersions = listOf(
     "1.21.10",
